@@ -1,0 +1,22 @@
+{
+  "id": "red-final",
+  "name": "Red final",
+  "file": "template.pptx",
+  "base_colors": { "dark": "8E0000", "main": "C00000", "bright": "FF0000" },
+  "theme_accent": "accent1",
+  "slides": [
+    { "number": 1,  "name": "Recap of previous lecture", "change": "Heading pill, option circles", "recolor": true },
+    { "number": 2,  "name": "Topics to be covered",      "change": "Heading pill, option circles", "recolor": true },
+    { "number": 3,  "name": "Heading and sub heading",   "change": "Heading pill",                  "recolor": true },
+    { "number": 4,  "name": "Sub heading",               "change": "Sub heading pill",              "recolor": true },
+    { "number": 5,  "name": "Sub heading with image",    "change": "Sub heading pill",              "recolor": true },
+    { "number": 6,  "name": "Question with image",       "change": "Question pill, option boxes",   "recolor": true },
+    { "number": 7,  "name": "Question with 4 images",    "change": "Question pill, option boxes",   "recolor": true },
+    { "number": 8,  "name": "Summary",                   "change": "Summary pill",                  "recolor": true },
+    { "number": 9,  "name": "Homework",                  "change": "Homework pill",                 "recolor": true },
+    { "number": 10, "name": "Table",                     "change": "Table header row",              "recolor": true },
+    { "number": 11, "name": "Question",                  "change": "Question pill, option boxes",   "recolor": true },
+    { "number": 12, "name": "Thank you",                 "change": "Thank you box",                 "recolor": true },
+    { "number": 13, "name": "Guide",                     "change": "Heading pill",                  "recolor": true }
+  ]
+}
