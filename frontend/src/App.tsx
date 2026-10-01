@@ -4,15 +4,19 @@ import { SlideGrid } from "@/components/SlideGrid/SlideGrid";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useDownload } from "@/hooks/useDownload";
 import { useTemplate } from "@/hooks/useTemplate";
-import { isHex, normalizeHex } from "@/lib/color";
+import { clampForWhiteText, isHex } from "@/lib/color";
 
 const TEMPLATE_ID = "red-final";
 const DEFAULT_COLOR = "#C00000";
+const DEFAULT_BACKGROUND = "#000000";
 
 export default function App() {
   const state = useTemplate(TEMPLATE_ID);
   const [color, setColor] = useState(DEFAULT_COLOR);
+  const [background, setBackground] = useState(DEFAULT_BACKGROUND);
+  const [icon, setIcon] = useState<File | null>(null);
   const previewColor = useDebouncedValue(color, 40); // keeps dragging the picker smooth
+  const previewBackground = useDebouncedValue(background, 40);
   const { download, busy, message } = useDownload(TEMPLATE_ID);
 
   useEffect(() => {
@@ -20,16 +24,28 @@ export default function App() {
   }, [color]);
 
   const handleChange = (hex: string) => {
-    if (isHex(hex)) setColor(normalizeHex(hex));
+    if (isHex(hex)) setColor(clampForWhiteText(hex));
+  };
+
+  const handleBackground = (hex: string) => {
+    if (isHex(hex)) setBackground(clampForWhiteText(hex));
   };
 
   return (
     <div className="layout">
       <ColorPanel
         color={color}
+        background={background}
         onChange={handleChange}
-        onDownload={() => download(color)}
-        onReset={() => setColor(DEFAULT_COLOR)}
+        onBackgroundChange={handleBackground}
+        icon={icon}
+        onIconChange={setIcon}
+        onDownload={() => download(color, background, icon)}
+        onReset={() => {
+          setColor(DEFAULT_COLOR);
+          setBackground(DEFAULT_BACKGROUND);
+          setIcon(null);
+        }}
         busy={busy || state.status !== "ready"}
         status={message}
       />
@@ -39,7 +55,9 @@ export default function App() {
           Could not load the template: {state.message}. Check that the backend is running on port 8000.
         </p>
       )}
-      {state.status === "ready" && <SlideGrid template={state.template} color={previewColor} />}
+      {state.status === "ready" && (
+        <SlideGrid template={state.template} color={previewColor} background={previewBackground} />
+      )}
     </div>
   );
 }

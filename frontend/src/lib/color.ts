@@ -59,13 +59,31 @@ export function shadesFor(hex: string): ColorSet {
   };
 }
 
-/** Relative luminance (WCAG). Above ~0.35 white text starts losing contrast. */
+/** Relative luminance (WCAG). White text stays readable at or below this. */
+export const MAX_WHITE_TEXT_LUMINANCE = 0.183;
+
 export function luminance(hex: string): number {
   const [r, g, b] = hexToRgb(hex).map((v) => {
     const c = v / 255;
     return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
   });
   return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+
+/** Keep the hue, but darken until white text on the shape still reads clearly. */
+export function clampForWhiteText(hex: string): string {
+  const normalized = normalizeHex(hex);
+  if (luminance(normalized) <= MAX_WHITE_TEXT_LUMINANCE) return normalized;
+  const [h, s, l] = rgbToHsl(...hexToRgb(normalized));
+  let lo = 0;
+  let hi = l;
+  for (let i = 0; i < 18; i++) {
+    const mid = (lo + hi) / 2;
+    const candidate = `#${rgbToHex(...hslToRgb(h, s, mid))}`;
+    if (luminance(candidate) <= MAX_WHITE_TEXT_LUMINANCE) lo = mid;
+    else hi = mid;
+  }
+  return `#${rgbToHex(...hslToRgb(h, s, lo))}`;
 }
 
 /**

@@ -13,8 +13,17 @@ class SlideNotFoundError(Exception):
         self.number = number
 
 
+class IconError(Exception):
+    def __init__(self, message: str) -> None:
+        self.message = message
+
+
 async def template_not_found_handler(_: Request, exc: TemplateNotFoundError) -> JSONResponse:
     return JSONResponse(status_code=404, content={"detail": f"Template '{exc.template_id}' was not found."})
+
+
+async def icon_error_handler(_: Request, exc: IconError) -> JSONResponse:
+    return JSONResponse(status_code=422, content={"detail": exc.message})
 
 
 async def slide_not_found_handler(_: Request, exc: SlideNotFoundError) -> JSONResponse:

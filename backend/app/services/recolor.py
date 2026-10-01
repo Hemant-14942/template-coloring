@@ -5,6 +5,7 @@ import zipfile
 
 from app.schemas.template import ColorSet, TemplateConfig
 from app.services.color import shades_for
+from app.services.icon import ICON_MEDIA
 
 SLIDE_RE = re.compile(r"^ppt/slides/slide(\d+)\.xml$")
 THEME_PATH = "ppt/theme/theme1.xml"
@@ -23,21 +24,40 @@ def _theme_replacer(accent: str, color: str):
     return lambda xml: pattern.sub(lambda m: m.group(1) + color + m.group(2), xml, count=1)
 
 
-def recolor_pptx(source: bytes, config: TemplateConfig, color: str) -> bytes:
+def _background_replacer(hex_color: str):
+    """Set each slide's own background fill. Theme colors such as dk1 stay untouched."""
+    pattern = re.compile(r"(<p:bg>\s*<p:bgPr>\s*<a:solidFill>)(.*?)(</a:solidFill>)", flags=re.DOTALL)
+    fill = f'<a:srgbClr val="{hex_color}"/>'
+    return lambda xml: pattern.sub(lambda m: m.group(1) + fill + m.group(3), xml, count=1)
+
+
+def recolor_pptx(
+    source: bytes,
+    config: TemplateConfig,
+    color: str,
+    background: str | None = None,
+    icon_png: bytes | None = None,
+) -> bytes:
     new = shades_for(color)
     targets = {s.number for s in config.slides if s.recolor}
     replace_slide = _slide_replacer(config.base_colors, new)
     replace_theme = _theme_replacer(config.theme_accent, new.main) if config.theme_accent else None
+    replace_background = _background_replacer(background) if background else None
 
     out = io.BytesIO()
     with zipfile.ZipFile(io.BytesIO(source)) as zin, zipfile.ZipFile(out, "w", zipfile.ZIP_DEFLATED) as zout:
         # [Content_Types].xml first (safest for Office), everything else in source order
         items = sorted(zin.infolist(), key=lambda i: i.filename != "[Content_Types].xml")
         for item in items:
-            data = zin.read(item.filename)
+            data = icon_png if icon_png and item.filename == ICON_MEDIA else zin.read(item.filename)
             match = SLIDE_RE.match(item.filename)
-            if match and int(match.group(1)) in targets:
-                data = replace_slide(data.decode("utf-8")).encode("utf-8")
+            if match:
+                xml = data.decode("utf-8")
+                if int(match.group(1)) in targets:
+                    xml = replace_slide(xml)
+                if replace_background:
+                    xml = replace_background(xml)
+                data = xml.encode("utf-8")
             elif replace_theme and item.filename == THEME_PATH:
                 data = replace_theme(data.decode("utf-8")).encode("utf-8")
             zout.writestr(item, data, compress_type=zipfile.ZIP_DEFLATED)

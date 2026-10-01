@@ -6,11 +6,11 @@ export function useDownload(templateId: string) {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
 
-  const download = useCallback(async (color: string) => {
+  const download = useCallback(async (color: string, background: string, icon: File | null) => {
     setBusy(true);
     setMessage("Building your file…");
     try {
-      const { blob, filename } = await downloadRecolored(templateId, color);
+      const { blob, filename } = await downloadRecolored(templateId, color, background, icon);
       saveBlob(blob, filename);
       setMessage(`Downloaded ${filename}`);
     } catch (e) {

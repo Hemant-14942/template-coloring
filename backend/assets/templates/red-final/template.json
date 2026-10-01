@@ -16,7 +16,6 @@
     { "number": 9,  "name": "Homework",                  "change": "Homework pill",                 "recolor": true },
     { "number": 10, "name": "Table",                     "change": "Table header row",              "recolor": true },
     { "number": 11, "name": "Question",                  "change": "Question pill, option boxes",   "recolor": true },
-    { "number": 12, "name": "Thank you",                 "change": "Thank you box",                 "recolor": true },
-    { "number": 13, "name": "Guide",                     "change": "Heading pill",                  "recolor": true }
+    { "number": 12, "name": "Guide",                     "change": "Heading pill",                  "recolor": true }
   ]
 }

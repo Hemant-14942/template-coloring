@@ -47,10 +47,20 @@ class TemplateDetail(BaseModel):
 
 class RecolorRequest(BaseModel):
     color: str = Field(..., examples=["#1F4E9A"])
+    background: str | None = Field(None, examples=["#0E1628"])
 
     @field_validator("color")
     @classmethod
     def validate_hex(cls, value: str) -> str:
         if not HEX_RE.match(value):
             raise ValueError("Color must be a 6-digit hex code like #1F4E9A.")
+        return value.lstrip("#").upper()
+
+    @field_validator("background")
+    @classmethod
+    def validate_background(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        if not HEX_RE.match(value):
+            raise ValueError("Background must be a 6-digit hex code like #0E1628.")
         return value.lstrip("#").upper()

@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { apiUrl } from "@/api/client";
+import { findBackgroundOffsets } from "@/lib/background";
+import { hexToRgb } from "@/lib/color";
 import type { Slide } from "@/types/template";
 
 interface Prepared {
@@ -7,6 +9,7 @@ interface Prepared {
   frame: ImageData;
   original: Uint8ClampedArray;
   indices: Uint32Array;
+  background: Uint32Array;
 }
 
 function loadImage(src: string): Promise<HTMLImageElement> {
@@ -22,9 +25,10 @@ function loadImage(src: string): Promise<HTMLImageElement> {
 interface Props {
   slide: Slide;
   lut: Float32Array; // shade lookup from buildShadeLut
+  background: string;
 }
 
-export function SlidePreview({ slide, lut }: Props) {
+export function SlidePreview({ slide, lut, background }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const prepared = useRef<Prepared | null>(null);
   const [ready, setReady] = useState(false);
@@ -45,8 +49,20 @@ export function SlidePreview({ slide, lut }: Props) {
         ctx.drawImage(img, 0, 0);
         const frame = ctx.getImageData(0, 0, img.width, img.height);
         const idx: number[] = [];
-        if (slide.recolor) for (let p = 0; p < m.length; p += 4) if (m[p] > 127) idx.push(p);
-        prepared.current = { ctx, frame, original: new Uint8ClampedArray(frame.data), indices: Uint32Array.from(idx) };
+        const shape = new Uint8Array(img.width * img.height);
+        if (slide.recolor) {
+          for (let p = 0; p < m.length; p += 4) if (m[p] > 127) {
+            idx.push(p);
+            shape[p / 4] = 1;
+          }
+        }
+        prepared.current = {
+          ctx,
+          frame,
+          original: new Uint8ClampedArray(frame.data),
+          indices: Uint32Array.from(idx),
+          background: findBackgroundOffsets(frame.data, img.width, img.height, shape),
+        };
         setReady(true);
       })
       .catch(() => !cancelled && setFailed(true));
@@ -66,8 +82,17 @@ export function SlidePreview({ slide, lut }: Props) {
       d[i + 1] = white + lut[k + 1];
       d[i + 2] = white + lut[k + 2];
     }
+    const [br, bg, bb] = hexToRgb(background);
+    const area = p.background;
+    for (let n = 0; n < area.length; n++) {
+      const i = area[n];
+      const keep = 1 - Math.max(o[i], o[i + 1], o[i + 2]) / 255;
+      d[i] = br * keep + o[i];
+      d[i + 1] = bg * keep + o[i + 1];
+      d[i + 2] = bb * keep + o[i + 2];
+    }
     p.ctx.putImageData(p.frame, 0, 0);
-  }, [lut, ready]);
+  }, [lut, background, ready]);
 
   return (
     <figure className="slide">

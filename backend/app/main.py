@@ -5,8 +5,10 @@ from fastapi.middleware.gzip import GZipMiddleware
 from app.api.v1.router import api_router
 from app.core.config import get_settings
 from app.core.exceptions import (
+    IconError,
     SlideNotFoundError,
     TemplateNotFoundError,
+    icon_error_handler,
     slide_not_found_handler,
     template_not_found_handler,
 )
@@ -32,6 +34,7 @@ def create_app() -> FastAPI:
     app.add_middleware(GZipMiddleware, minimum_size=1024)
     app.add_exception_handler(TemplateNotFoundError, template_not_found_handler)
     app.add_exception_handler(SlideNotFoundError, slide_not_found_handler)
+    app.add_exception_handler(IconError, icon_error_handler)
     app.include_router(api_router, prefix=settings.api_v1_prefix)
     return app
 

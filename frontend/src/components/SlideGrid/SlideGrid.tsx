@@ -7,9 +7,10 @@ import "./SlideGrid.css";
 interface Props {
   template: TemplateDetail;
   color: string;
+  background: string;
 }
 
-export function SlideGrid({ template, color }: Props) {
+export function SlideGrid({ template, color, background }: Props) {
   const lut = useMemo(() => buildShadeLut(shadesFor(color), template.base_colors), [color, template.base_colors]);
 
   return (
@@ -17,7 +18,7 @@ export function SlideGrid({ template, color }: Props) {
       <h2 className="grid__title">Preview, {template.slides.length} slides</h2>
       <div className="grid">
         {template.slides.map((s) => (
-          <SlidePreview key={s.number} slide={s} lut={lut} />
+          <SlidePreview key={s.number} slide={s} lut={lut} background={background} />
         ))}
       </div>
     </main>
